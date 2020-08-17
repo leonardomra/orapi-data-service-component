@@ -13,9 +13,9 @@ info:
     name: Apache License - Version 2.0, January 2004
     url: http://www.apache.org/licenses//
   version: 1.0.0
-servers:
-- url: https://virtserver.swaggerhub.com/OR-API/data-api/1.0.0
-  description: SwaggerHub API Auto Mocking
+#servers:
+#- url: https://virtserver.swaggerhub.com/OR-API/data-api/1.0.0
+#  description: SwaggerHub API Auto Mocking
 paths:
   /data/health:
     get:
@@ -406,7 +406,7 @@ components:
     body:
       type: object
       properties:
-        fileName:
+        file:
           type: string
           format: binary
         label:

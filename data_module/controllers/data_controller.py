@@ -67,7 +67,7 @@ def data_kind_id_put(id, kind, label):  # noqa: E501
     return 'do some magic!'
 
 
-def data_kind_upload_post(kind, file_name=None, label=None):  # noqa: E501
+def data_kind_upload_post(kind, file=None, label=None):  # noqa: E501
     """data_kind_upload_post
 
     Upload a dataset in CSV format. # noqa: E501
@@ -81,4 +81,9 @@ def data_kind_upload_post(kind, file_name=None, label=None):  # noqa: E501
 
     :rtype: Dataset
     """
+    
+    print(connexion.request.files['file'], flush=True)
+    print(connexion.request.form['label'], flush=True)
+    print(kind, flush=True)
+    
     return 'do some magic!'
