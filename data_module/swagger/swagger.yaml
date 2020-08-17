@@ -1,0 +1,415 @@
+openapi: 3.0.0
+info:
+  title: Data.ai API
+  description: The OpenResearch API (OR-API) provides users with machine learning-powered
+    NLP tools for scientific text analysis and exploration. In addition to allowing
+    the training of custom models with custom data, the OR-API enables users to integrate
+    the insights from the analysis into dashboards and applications.
+  contact:
+    name: OpenResearch COVID-19 GbR
+    url: https://openresearch.cloud
+    email: contact@openresearch.cloud
+  license:
+    name: Apache License - Version 2.0, January 2004
+    url: http://www.apache.org/licenses//
+  version: 1.0.0
+servers:
+- url: https://virtserver.swaggerhub.com/OR-API/data-api/1.0.0
+  description: SwaggerHub API Auto Mocking
+paths:
+  /data/health:
+    get:
+      tags:
+      - service
+      description: Check health of service.
+      operationId: data_health_get
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+      x-openapi-router-controller: data_module.controllers.service_controller
+  /data/{kind}:
+    get:
+      tags:
+      - data
+      description: Obtain information about files.
+      operationId: data_kind_get
+      parameters:
+      - name: kind
+        in: path
+        description: Kind of data.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: result
+          enum:
+          - result
+          - sample
+          - dataset
+          - model
+      - name: limit
+        in: query
+        description: The amount of files to be returned.
+        required: false
+        style: form
+        explode: true
+        schema:
+          maximum: 100
+          minimum: 1
+          type: integer
+          example: 10
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Dataset'
+                x-content-type: application/json
+      x-openapi-router-controller: data_module.controllers.data_controller
+  /data/{kind}/upload:
+    post:
+      tags:
+      - data
+      description: Upload a dataset in CSV format.
+      operationId: data_kind_upload_post
+      parameters:
+      - name: kind
+        in: path
+        description: Kind of data.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: dataset
+          enum:
+          - result
+          - sample
+          - dataset
+          - model
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/body'
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+      x-openapi-router-controller: data_module.controllers.data_controller
+  /data/{kind}/{id}:
+    get:
+      tags:
+      - data
+      description: Use this endpoint to obtain metadata of specific dataset.
+      operationId: data_kind_id_get
+      parameters:
+      - name: id
+        in: path
+        description: Id of dataset.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+      - name: kind
+        in: path
+        description: Kind of data.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: dataset
+          enum:
+          - result
+          - sample
+          - dataset
+          - model
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+      x-openapi-router-controller: data_module.controllers.data_controller
+    put:
+      tags:
+      - data
+      description: Use this endpoint to modify the mentadata of a specific dataset.
+      operationId: data_kind_id_put
+      parameters:
+      - name: id
+        in: path
+        description: Id of dataset.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+      - name: kind
+        in: path
+        description: Kind of data.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: dataset
+          enum:
+          - result
+          - sample
+          - dataset
+          - model
+      - name: label
+        in: header
+        description: Label of dataset.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: CORD-19
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+      x-openapi-router-controller: data_module.controllers.data_controller
+    delete:
+      tags:
+      - data
+      description: Use this endpoint to delete a specific dataset.
+      operationId: data_kind_id_delete
+      parameters:
+      - name: id
+        in: path
+        description: Id of dataset.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+      - name: kind
+        in: path
+        description: Kind of data.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: dataset
+          enum:
+          - result
+          - sample
+          - dataset
+          - model
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+      x-openapi-router-controller: data_module.controllers.data_controller
+components:
+  schemas:
+    Health:
+      type: object
+      properties:
+        status:
+          format: string
+          example: Job Service Component is up!
+      example:
+        status: Job Service Component is up!
+    Dataset:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+        label:
+          type: string
+          example: CORD-19
+        fileName:
+          type: string
+          example: dataset.csv
+        dateCreated:
+          type: string
+          format: date-time
+          example: 2017-07-21T17:32:28Z
+        dateModified:
+          type: string
+          format: date-time
+          example: 2017-07-21T17:32:28Z
+      description: Model of a dataset metadata.
+      example:
+        fileName: dataset.csv
+        dateCreated: 2017-07-21T17:32:28Z
+        dateModified: 2017-07-21T17:32:28Z
+        id: 4baa97f6-c10f-11ea-b3de-0242ac130004
+        label: CORD-19
+    Job:
+      required:
+      - dateCreated
+      - dateModified
+      - id
+      - kind
+      - label
+      - status
+      - user
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+        user:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+        label:
+          type: string
+          example: Topic modeling CORD-19.
+        description:
+          type: string
+          example: Model trained on 40k scientific papers about COVID-19.
+        kind:
+          type: string
+          example: tml
+        model:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+        dataSource:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+        dataSample:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+        status:
+          type: string
+          example: waiting
+        output:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+        dateCreated:
+          type: string
+          format: date-time
+          example: 2017-07-21T17:32:28Z
+        dateModified:
+          type: string
+          format: date-time
+          example: 2017-07-21T17:32:28Z
+      description: Model of a job.
+    Tasks:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+        params:
+          type: object
+          example: {}
+      description: Task metadata.
+    Topic:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+        params:
+          type: object
+          example: {}
+      description: Topic metadata.
+    Queue:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+        params:
+          type: object
+          example: {}
+      description: Queue metadata.
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+        params:
+          type: object
+          example: {}
+      description: Event metadata.
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+        params:
+          type: object
+          example: {}
+      description: Item metadata.
+    Channel:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+        params:
+          type: object
+          example: {}
+      description: Channel metadata.
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 4baa97f6-c10f-11ea-b3de-0242ac130004
+        params:
+          type: object
+          example: {}
+      description: Message metadata.
+    body:
+      type: object
+      properties:
+        fileName:
+          type: string
+          format: binary
+        label:
+          type: string
+          example: CORD-19
+
