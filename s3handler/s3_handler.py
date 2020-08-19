@@ -1,6 +1,9 @@
 import logging
+import os
+import io
 import boto3
 from botocore.exceptions import ClientError
+from werkzeug.utils import secure_filename
 
 class S3Handler():
     
@@ -47,17 +50,46 @@ class S3Handler():
     
     def uploadFileObject(self, data, bucket_name, filename):
         useResource = True
+        response = None
         if useResource:
             try:
-                self.s3Resource.Object(bucket_name, filename).put(Body=data)
+                response = self.s3Resource.Object(bucket_name, filename).put(Body=data)
             except ClientError as e:
                 logging.error(e)
                 return False
         else:
             try:
-                self.s3.put_object(Body=data, Bucket=bucket_name, Key=filename)
+                response = self.s3.put_object(Body=data, Bucket=bucket_name, Key=filename)
             except ClientError as e:
                 logging.error(e)
                 return False  
-        return True
-        
+        return response
+    
+    def listObjectsInBucket(self, bucketName, prefix):
+        result = self.s3.list_objects(Bucket = bucketName, Prefix=prefix, Delimiter='/')
+        keys = []
+        if 'Contents' in result:
+            for o in result['Contents']:
+                keys.append(o['Key'])
+        return keys
+
+    def storeDataLocally(self, _file, filename):
+        useSimple = True
+        filenameWithPath = os.path.join('/home' , secure_filename(filename))
+        if useSimple:
+            _file.stream.seek(0)
+            _file.save(filenameWithPath)
+        else:
+            inMemoryFile = io.BytesIO(_file.read())
+            inMemoryFile.seek(0)
+            self.writeToFile(filenameWithPath, inMemoryFile)
+    
+    def writeToFile(self, filename, bytesio):
+        """
+        Write the contents of the given BytesIO to a file.
+        Creates the file or overwrites the file if it does
+        not exist yet. 
+        """
+        with open(filename, "wb") as outfile:
+            # Copy the BytesIO stream to the output file
+            outfile.write(bytesio.getbuffer())

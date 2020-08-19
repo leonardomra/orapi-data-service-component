@@ -1,6 +1,7 @@
 import connexion
 import six
 import botocore
+import time
 import uuid
 import os
 import jwt
@@ -11,8 +12,8 @@ from urhandler.user_handler import UserHandler
 from dbhandler.mysql_handler import MySQLHandler
 from data_module.models.datacomplex import DataComplex
 from s3handler.s3_handler import S3Handler
-from werkzeug.utils import secure_filename
 from flask import request
+from werkzeug.utils import secure_filename
 
 db = MySQLHandler(os.environ['MYSQL_USER'], os.environ['MYSQL_PASSWORD'], os.environ['MYSQL_HOST'], os.environ['MYSQL_DATABASE'])
 ur = UserHandler(os.environ['AWS_REGION'], os.environ['AWS_ACCESS_KEY'], os.environ['AWS_SECRET_KEY'])
@@ -118,97 +119,38 @@ def data_kind_upload_post(kind, file=None, label=None):  # noqa: E501
     except Exception:
         return '"format" parameter expected.', 400 
 
-
-
     # get tocken
     accessToken = connexion.request.headers['Authorization']
     decodedAccessToken = jwt.decode(accessToken.replace('Bearer ', ''), verify=False)
     userId = decodedAccessToken['sub']
     
     # check/create bucket
-    bucketName = 'openresearch'
+    bucketName = 'openresearch' 
     s3.createBucket(bucketName.lower())
     s3.listBuckets()
     
     # get file to store
     _file = request.files['file']
-
-    # save in disk: simple
-    #filenameWithPath = os.path.join('/home' , secure_filename(dataset.file_name))
-    #_file.stream.seek(0)
-    #_file.save(filenameWithPath)
-
-    # save in disk: complex
     inMemoryFile = io.BytesIO(_file.read())
     inMemoryFile.seek(0)
-    #writeToFile(filenameWithPath, inMemoryFile)
-    
-    # 
-    s3.uploadFileObject(inMemoryFile.read(), bucketName, userId + '/' + secure_filename(dataset.file_name))
-    #s3.uploadFileObject(_file.read(), bucketName, userId + '/' + secure_filename(dataset.file_name))
-    
-    
-    
-    #inMemoryFile.getbuffer()
-    #inMemoryFile.getvalue()
+   
+    # store s3
+    key = userId + '/' + secure_filename(dataset.file_name)
+    existingKeys = s3.listObjectsInBucket(bucketName, userId + '/')
+    if key in existingKeys:
+        return 'file name already exists. Either delete the file from storage or rename it.', 400 
 
-    #with connexion.request.files['file'].stream.read() as data:
-    #    s3.uploadFileObject(data, bucketName, userId + '/' + 'bl2a.jpg')
-    #s3.uploadFileObject(connexion.request.files['file'].stream.read(), bucketName, userId + '/' + 'bl2a.jpg')
-    #print(connexion.request.files['file'].read(), flush=True)   
-
-    #connexion.request.files['file'].save(os.path.join('/home' , secure_filename(dataset.file_name)))
-    #_file.save(inMemoryFile)
-    #inMemoryFile.seek(0)
-    #d = connexion.request.files['file'].read()
-
-    #s3.uploadFileObject(d, bucketName, userId + '/' + secure_filename(dataset.file_name))
+    s3Resp = s3.uploadFileObject(inMemoryFile.read(), bucketName, key)
+    # inMemoryFile.getbuffer(), inMemoryFile.getvalue()
     
-    
-    
-    
-    
-    
-    """
-    print(dataset.location, flush=True)
+    if s3Resp:
+        dataset.location = bucketName + '/' + key
+        # store persistent data
+        add_dataset = ("INSERT INTO Data "
+                "(id, fileName, format, kind, label, location) "
+                "VALUES (%s, %s, %s, %s, %s, %s)")
+        data_dataset = (dataset.id, dataset.file_name, dataset.format, dataset.kind, dataset.label, dataset.location)
+        db.add(add_dataset, data_dataset)
 
-    dataset.location = 'unknown'
-    
-    # store persistent data
-    add_dataset = ("INSERT INTO Data "
-               "(id, fileName, format, kind, label, location) "
-               "VALUES (%s, %s, %s, %s, %s, %s)")
-    data_dataset = (dataset.id, dataset.file_name, dataset.format, dataset.kind, dataset.label, dataset.location)
-    db.add(add_dataset, data_dataset)
-    """
+    return dataset
 
-    '''
-    accessToken = connexion.request.headers['Authorization']
-    decodedAccessToken = jwt.decode(accessToken.replace('Bearer ', ''), verify=False)
-    print(decodedAccessToken['sub'], flush=True)
-    print(os.environ['AWS_USERPOOL_ID'], flush=True)
-    print(decodedAccessToken, flush=True)
-
-    user = None
-    try:
-        user = ur.getUser(os.environ['AWS_USERPOOL_ID'], decodedAccessToken['username'])
-    except botocore.exceptions.ClientError as e:
-        print(e)
-    print(user, flush=True)
-
-    print(connexion.request.files['file'], flush=True)
-    print(connexion.request.form['label'], flush=True)
-    print(kind, flush=True)
-    '''
-
-    return 'do some magic!'
-
-def writeToFile(filename, bytesio):
-    """
-    Write the contents of the given BytesIO to a file.
-    Creates the file or overwrites the file if it does
-    not exist yet. 
-    """
-    with open(filename, "wb") as outfile:
-        # Copy the BytesIO stream to the output file
-        outfile.write(bytesio.getbuffer())
