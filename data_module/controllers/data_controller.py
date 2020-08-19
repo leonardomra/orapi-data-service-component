@@ -16,7 +16,7 @@ from flask import request
 from werkzeug.utils import secure_filename
 
 db = MySQLHandler(os.environ['MYSQL_USER'], os.environ['MYSQL_PASSWORD'], os.environ['MYSQL_HOST'], os.environ['MYSQL_DATABASE'])
-ur = UserHandler(os.environ['AWS_REGION'], os.environ['AWS_ACCESS_KEY'], os.environ['AWS_SECRET_KEY'])
+ur = UserHandler(os.environ['AWS_REGION'], os.environ['AWS_ACCESS_KEY'], os.environ['AWS_SECRET_KEY'], db)
 s3 = S3Handler(os.environ['AWS_REGION'], os.environ['AWS_ACCESS_KEY'], os.environ['AWS_SECRET_KEY'])
 
 def data_kind_get(kind, limit=None):  # noqa: E501
@@ -124,6 +124,9 @@ def data_kind_upload_post(kind, file=None, label=None):  # noqa: E501
     decodedAccessToken = jwt.decode(accessToken.replace('Bearer ', ''), verify=False)
     userId = decodedAccessToken['sub']
     
+    # check user registration
+    ur.storeUserInDB(userId, os.environ['AWS_USERPOOL_ID'], decodedAccessToken['username'])
+
     # check/create bucket
     bucketName = 'openresearch' 
     s3.createBucket(bucketName.lower())
