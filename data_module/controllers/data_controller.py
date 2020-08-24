@@ -123,9 +123,10 @@ def data_kind_upload_post(kind, file=None, label=None):  # noqa: E501
     accessToken = connexion.request.headers['Authorization']
     decodedAccessToken = jwt.decode(accessToken.replace('Bearer ', ''), verify=False)
     userId = decodedAccessToken['sub']
-    
+    username = decodedAccessToken['username']
+
     # check user registration
-    ur.storeUserInDB(userId, os.environ['AWS_USERPOOL_ID'], decodedAccessToken['username'])
+    ur.storeUserInDB(userId, os.environ['AWS_USERPOOL_ID'], username)
 
     # check/create bucket
     bucketName = 'openresearch' 
@@ -156,4 +157,3 @@ def data_kind_upload_post(kind, file=None, label=None):  # noqa: E501
         db.add(add_dataset, data_dataset)
 
     return dataset
-
