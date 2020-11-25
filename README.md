@@ -47,3 +47,8 @@ docker build -t data_module .
 # starting up a container
 docker run -p 8080:8080 data_module
 ```
+
+## Virtual Environment
+
+python3 -m venv my-env
+source my-env/bin/activate

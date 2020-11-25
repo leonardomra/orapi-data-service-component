@@ -8,10 +8,10 @@ import jwt
 import io
 from data_module.models.dataset import Dataset  # noqa: E501
 from data_module import util
-from urhandler.user_handler import UserHandler
-from dbhandler.mysql_handler import MySQLHandler
+from orurhandler import UserHandler
+from ordbhandler import MySQLHandler
+from ors3handler import S3Handler
 from data_module.models.datacomplex import DataComplex
-from s3handler.s3_handler import S3Handler
 from flask import request
 from werkzeug.utils import secure_filename
 
