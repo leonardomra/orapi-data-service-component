@@ -52,6 +52,7 @@ paths:
           - sample
           - dataset
           - model
+          - adm
       - name: limit
         in: query
         description: The amount of files to be returned.
@@ -95,6 +96,7 @@ paths:
           - sample
           - dataset
           - model
+          - adm
       requestBody:
         content:
           multipart/form-data:
@@ -139,6 +141,7 @@ paths:
           - sample
           - dataset
           - model
+          - adm
       responses:
         "200":
           description: Success
@@ -177,6 +180,7 @@ paths:
           - sample
           - dataset
           - model
+          - adm
       - name: label
         in: header
         description: Label of dataset.
@@ -224,6 +228,7 @@ paths:
           - sample
           - dataset
           - model
+          - adm
       responses:
         "200":
           description: Success

@@ -49,7 +49,7 @@ def data_kind_id_delete(id, kind):  # noqa: E501
     return 'do some magic!'
 
 
-def data_kind_id_get(id, kind):  # noqa: E501
+def data_kind_id_get(id_ = None, kind = None):  # noqa: E501
     """data_kind_id_get
 
     Use this endpoint to obtain metadata of specific dataset. # noqa: E501
@@ -61,7 +61,28 @@ def data_kind_id_get(id, kind):  # noqa: E501
 
     :rtype: Dataset
     """
-    return 'do some magic!'
+    print(id_)
+    print(kind)
+
+
+    dataQuery = (
+            "SELECT id, fileName, format, kind, label, location, dateCreated, dateModified FROM Data WHERE id = %s and kind = %s")
+    paramsData = (id_, kind)
+    resultsData = db.get(dataQuery, paramsData)
+    result = None
+    if len(resultsData) > 0:
+        result = {
+            'id': resultsData[0][0],
+            'fileName': resultsData[0][1],
+            'format': resultsData[0][2],
+            'kind': resultsData[0][3],
+            'label': resultsData[0][4],
+            'location': resultsData[0][5],
+            'dateCreated': resultsData[0][6],
+            'dateModified': resultsData[0][7],
+        }
+    print(result)
+    return result
 
 
 def data_kind_id_put(id, kind, label):  # noqa: E501
@@ -137,7 +158,7 @@ def data_kind_upload_post(kind, file=None, label=None):  # noqa: E501
     _file = request.files['file']
     inMemoryFile = io.BytesIO(_file.read())
     inMemoryFile.seek(0)
-   
+
     # store s3
     key = userId + '/' + secure_filename(dataset.file_name)
     existingKeys = s3.listObjectsInBucket(bucketName, userId + '/')
